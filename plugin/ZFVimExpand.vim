@@ -20,6 +20,9 @@ endif
 if !exists('g:ZFVimExpand_reindent')
     let g:ZFVimExpand_reindent=0
 endif
+if !exists('g:ZFVimExpand_customItemParser')
+    let g:ZFVimExpand_customItemParser=''
+endif
 
 " ============================================================
 command! -range -nargs=* ZFExpand :<line1>,<line2>call ZF_Expand(<f-args>)
@@ -60,6 +63,14 @@ function! s:parse(content, tagL, tagR)
     return {'template' : template, 'pattern' : patternList}
 endfunction
 function! s:parseItem(pattern)
+    " custom rule
+    if exists('g:ZFVimExpand_customItemParser') && !empty(g:ZFVimExpand_customItemParser)
+        execute 'let split = ' . g:ZFVimExpand_customItemParser . "('" . a:pattern . "')"
+        if !empty(split)
+            return split
+        endif
+    endif
+
     " 1..3
     let split = split(a:pattern, g:ZFVimExpand_numSplitToken)
     if len(split) == 2

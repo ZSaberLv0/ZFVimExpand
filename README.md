@@ -22,6 +22,12 @@ expand utility
     aa 3 bb zz cc
     ```
 
+inspired from [Olical/vim-expand](https://github.com/Olical/vim-expand), with these advantages:
+
+* support Windows
+* more configurable
+* able to add your own rules
+
 
 # How to use
 
@@ -49,6 +55,18 @@ let g:ZFVimExpand_numSplitToken='\.\.'
 
 " whether auto reindent after expand
 let g:ZFVimExpand_reindent=0
+
+" add your custom item parse rules
+" return passed list if success, or empty list or string if unable to parse
+"
+" for example
+"     {add|remove}User
+" your parser would receive this as pattern
+"     add|remove
+let g:ZFVimExpand_customItemParser='MyItemParser'
+function! MyItemParser(pattern)
+    return split(a:pattern, '|')
+endfunction
 ```
 
 
