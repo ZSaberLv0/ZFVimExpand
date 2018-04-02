@@ -5,21 +5,21 @@ expand utility
 * before expand:
 
     ```
-    aa {1..3} bb {xx,yy,zz} cc
+    aa {1..3} bb {xx,yy,zz} cc {..} dd
     ```
 
 * after expand:
 
     ```
-    aa 1 bb xx cc
-    aa 1 bb yy cc
-    aa 1 bb zz cc
-    aa 2 bb xx cc
-    aa 2 bb yy cc
-    aa 2 bb zz cc
-    aa 3 bb xx cc
-    aa 3 bb yy cc
-    aa 3 bb zz cc
+    aa 1 bb xx cc xx dd
+    aa 1 bb yy cc yy dd
+    aa 1 bb zz cc zz dd
+    aa 2 bb xx cc xx dd
+    aa 2 bb yy cc yy dd
+    aa 2 bb zz cc zz dd
+    aa 3 bb xx cc xx dd
+    aa 3 bb yy cc yy dd
+    aa 3 bb zz cc zz dd
     ```
 
 inspired from [Olical/vim-expand](https://github.com/Olical/vim-expand), with these advantages:
@@ -53,6 +53,9 @@ let g:ZFVimExpand_textSplitToken=','
 " token to split number
 let g:ZFVimExpand_numSplitToken='\.\.'
 
+" token to repeat previous pattern
+let g:ZFVimExpand_repeatToken='\.\.'
+
 " whether auto reindent after expand
 let g:ZFVimExpand_reindent=0
 
@@ -72,11 +75,7 @@ endfunction
 
 # Functions
 
-* `:ZFExpand`
-
-    ```
-    :ZFExpand [tagL, tagR]
-    ```
+* `:ZFExpand [tagL, tagR]`
 
     `tagL` and `tagR` are optional, it's useful if your content contains the tag token, example:
 

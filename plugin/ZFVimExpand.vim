@@ -17,6 +17,9 @@ endif
 if !exists('g:ZFVimExpand_numSplitToken')
     let g:ZFVimExpand_numSplitToken='\.\.'
 endif
+if !exists('g:ZFVimExpand_repeatToken')
+    let g:ZFVimExpand_repeatToken='\.\.'
+endif
 if !exists('g:ZFVimExpand_reindent')
     let g:ZFVimExpand_reindent=0
 endif
@@ -35,7 +38,7 @@ let s:new_line = "ZFVimExpandnewLine"
 "   'template' : 'text',
 "   'pattern' : [
 "     {
-"       'pos' : 'pos in text',
+"       'pos' : ['pos in template'],
 "       'list' : ['1', '2', ...],
 "     },
 "     ...
@@ -50,18 +53,31 @@ function! s:parse(content, tagL, tagR)
         if empty(match)
             break
         endif
+        let pattern=strpart(match, len(a:tagL), len(match) - len(a:tagL) - len(a:tagR))
+        if matchstr(pattern, g:ZFVimExpand_repeatToken) == pattern
+            if empty(patternList)
+                return {'template' : template, 'pattern' : patternList}
+            endif
+
+            let matchPos = match(template, tagPattern)
+            let template = strpart(template, 0, matchPos) . strpart(template, matchPos + len(match))
+            let patternList[-1]['pos'] += [matchPos]
+            continue
+        endif
+
         try
-            let itemList = s:parseItem(strpart(match, len(a:tagL), len(match) - len(a:tagL) - len(a:tagR)))
+            let itemList = s:parseItem(pattern)
         endtry
         if empty(itemList)
             continue
         endif
         let matchPos = match(template, tagPattern)
         let template = strpart(template, 0, matchPos) . strpart(template, matchPos + len(match))
-        let patternList += [{'pos' : matchPos, 'list' : itemList}]
+        let patternList += [{'pos' : [matchPos], 'list' : itemList}]
     endwhile
     return {'template' : template, 'pattern' : patternList}
 endfunction
+
 function! s:parseItem(pattern)
     " custom rule
     if exists('g:ZFVimExpand_customItemParser') && !empty(g:ZFVimExpand_customItemParser)
@@ -80,23 +96,34 @@ function! s:parseItem(pattern)
     " a,b,c
     return split(a:pattern, g:ZFVimExpand_textSplitToken)
 endfunction
+
+function! s:processReplace(template, posList, posOffset, replace)
+    if len(a:posList) == 1
+        let pos = a:posList[0] + a:posOffset
+        return strpart(a:template, 0, pos) . a:replace . strpart(a:template, pos)
+    else
+        let ret = strpart(a:template, 0, a:posList[0] + a:posOffset) . a:replace
+        for i in range(1, len(a:posList)-1)
+            let ret .= strpart(a:template, a:posList[i-1] + a:posOffset, a:posList[i] - a:posList[i-1])
+            let ret .= a:replace
+        endfor
+        let ret .= strpart(a:template, a:posList[-1] + a:posOffset)
+        return ret
+    endif
+endfunction
+
 function! s:process(template, patternList, patternIndex, posOffset)
     let ret = ''
     let pattern = a:patternList[a:patternIndex]
-    let pos = pattern['pos'] + a:posOffset
     if a:patternIndex + 1 < len(a:patternList)
         for list in pattern['list']
-            let templateNew = ''
-            let templateNew .= strpart(a:template, 0, pos)
-            let templateNew .= list
-            let templateNew .= strpart(a:template, pos)
-            let ret .= s:process(templateNew, a:patternList, a:patternIndex + 1, a:posOffset + len(list))
+            let templateNew = s:processReplace(a:template, pattern['pos'], a:posOffset, list)
+            let ret .= s:process(templateNew, a:patternList, a:patternIndex + 1, a:posOffset + len(list) * len(pattern['pos']))
         endfor
     else
         for list in pattern['list']
-            let ret .= strpart(a:template, 0, pos)
-            let ret .= list
-            let ret .= strpart(a:template, pos)
+            let templateNew = s:processReplace(a:template, pattern['pos'], a:posOffset, list)
+            let ret .= templateNew
             let ret .= "\n"
         endfor
     endif
