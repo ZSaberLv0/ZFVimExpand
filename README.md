@@ -28,9 +28,14 @@ expand utility
 
 inspired from [Olical/vim-expand](https://github.com/Olical/vim-expand), with these advantages:
 
-* support Windows
+* implemented in pure vim script, support Windows
 * more configurable
+* more pattern expand rule
 * able to add your own rules
+
+disadvantages:
+
+* no shell env support (such as `$HOME`)
 
 
 # How to use
