@@ -5,29 +5,27 @@ Author: ZSaberLv0 <http://zsaber.com/>
 
 expand utility                                      *ZFVimExpand* *ZFExpand* *ZFExpandReversely*
 
-expand utility
-
 * before expand:
 
     ```
-    void {add,remove}Item{0..2}(void) {
+    void {add,remove}Item{0..2}(int item{..}) {
     }
     ```
 
 * after expand: (by `:ZFExpandReversely`)
 
     ```
-    void addItem0(void) {
+    void addItem0(int item0) {
     }
-    void removeItem0(void) {
+    void removeItem0(int item0) {
     }
-    void addItem1(void) {
+    void addItem1(int item1) {
     }
-    void removeItem1(void) {
+    void removeItem1(int item1) {
     }
-    void addItem2(void) {
+    void addItem2(int item2) {
     }
-    void removeItem2(void) {
+    void removeItem2(int item2) {
     }
     ```
 
