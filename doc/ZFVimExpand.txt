@@ -3,26 +3,32 @@
 Author: ZSaberLv0 <http://zsaber.com/>
 
 
-expand utility                                                      *ZFExpand* *ZFVimExpand*
+expand utility                                      *ZFVimExpand* *ZFExpand* *ZFExpandReversely*
+
+expand utility
 
 * before expand:
 
     ```
-    aa {1..3} bb {xx,yy,zz} cc {..} dd
+    void {add,remove}Item{0..2}(void) {
+    }
     ```
 
-* after expand:
+* after expand: (by `:ZFExpandReversely`)
 
     ```
-    aa 1 bb xx cc xx dd
-    aa 1 bb yy cc yy dd
-    aa 1 bb zz cc zz dd
-    aa 2 bb xx cc xx dd
-    aa 2 bb yy cc yy dd
-    aa 2 bb zz cc zz dd
-    aa 3 bb xx cc xx dd
-    aa 3 bb yy cc yy dd
-    aa 3 bb zz cc zz dd
+    void addItem0(void) {
+    }
+    void removeItem0(void) {
+    }
+    void addItem1(void) {
+    }
+    void removeItem1(void) {
+    }
+    void addItem2(void) {
+    }
+    void removeItem2(void) {
+    }
     ```
 
 inspired from [Olical/vim-expand](https://github.com/Olical/vim-expand), with these advantages:
@@ -41,6 +47,15 @@ inspired from [Olical/vim-expand](https://github.com/Olical/vim-expand), with th
     ```
 
 1. use `:ZFExpand`, in normal mode (expand current line) or visual mode (selected lines)
+
+pattern rules:
+
+* `{2..5}` : expand to `2 3 4 5` number sequence
+* `{aa,bb,cc}` : expand to `aa bb cc` string sequence
+* `{..}` : repeat previous pattern
+* `{..3}` : repeat 3rd pattern
+
+you may also supply your own pattern rules, see the Config below
 
 
 # Config
@@ -93,4 +108,8 @@ endfunction
     int n1 = {0,1,2};
     int n2 = {0,1,2};
     ```
+
+* `:ZFExpandReversely [tagL, tagR]`
+
+    same as `:ZFExpand` but expand items in reverse order
 
