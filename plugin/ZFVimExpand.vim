@@ -15,10 +15,10 @@ if !exists('g:ZFVimExpand_textSplitToken')
     let g:ZFVimExpand_textSplitToken=','
 endif
 if !exists('g:ZFVimExpand_numSplitToken')
-    let g:ZFVimExpand_numSplitToken='\.\.'
+    let g:ZFVimExpand_numSplitToken='..'
 endif
 if !exists('g:ZFVimExpand_repeatToken')
-    let g:ZFVimExpand_repeatToken='\.\.'
+    let g:ZFVimExpand_repeatToken='..'
 endif
 if !exists('g:ZFVimExpand_reindent')
     let g:ZFVimExpand_reindent=0
@@ -46,14 +46,14 @@ let s:new_line = "ZFVE__EVFZ"
 function! s:parse(content, tagL, tagR)
     let patternList = []
     let template = a:content
-    let tagPattern = a:tagL . '[^]\{-1,}' . a:tagR
+    let tagPattern = '\V' . a:tagL . '\[^]\{-1,}' . a:tagR
     while 1
         let match = matchstr(template, tagPattern)
         if empty(match)
             break
         endif
         let pattern=strpart(match, len(a:tagL), len(match) - len(a:tagL) - len(a:tagR))
-        if matchstr(pattern, g:ZFVimExpand_repeatToken . '[0-9]*') == pattern
+        if matchstr(pattern, '\V' . g:ZFVimExpand_repeatToken . '\[0-9]\*') == pattern
             let patternIndex = matchstr(pattern, '[0-9]*$')
             if len(patternIndex) == 0
                 let patternIndex = len(patternList) - 1
@@ -90,13 +90,13 @@ function! s:parseItem(pattern)
     endif
 
     " 1..3
-    let split = split(a:pattern, g:ZFVimExpand_numSplitToken)
+    let split = split(a:pattern, '\V' . g:ZFVimExpand_numSplitToken)
     if len(split) == 2
         return range(split[0], split[1])
     endif
 
     " a,b,c
-    return split(a:pattern, g:ZFVimExpand_textSplitToken)
+    return split(a:pattern, '\V' . g:ZFVimExpand_textSplitToken)
 endfunction
 
 function! s:process(reverse, template, patternList, patternIndex)

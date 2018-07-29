@@ -53,7 +53,7 @@ pattern rules:
 * `{2..5}` : expand to `2 3 4 5` number sequence
 * `{aa,bb,cc}` : expand to `aa bb cc` string sequence
 * `{..}` : repeat previous pattern
-* `{..3}` : repeat 3rd pattern
+* `{..3}` : repeat 3rd pattern (index start from 0)
 
 you may also supply your own pattern rules, see the Config below
 
@@ -69,10 +69,10 @@ let g:ZFVimExpand_tagR='}'
 let g:ZFVimExpand_textSplitToken=','
 
 " token to split number
-let g:ZFVimExpand_numSplitToken='\.\.'
+let g:ZFVimExpand_numSplitToken='..'
 
 " token to repeat previous pattern
-let g:ZFVimExpand_repeatToken='\.\.'
+let g:ZFVimExpand_repeatToken='..'
 
 " whether auto reindent after expand
 let g:ZFVimExpand_reindent=0
