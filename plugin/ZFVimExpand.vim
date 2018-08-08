@@ -32,7 +32,7 @@ command! -range -nargs=* ZFExpand :<line1>,<line2>call ZF_Expand(0, <f-args>)
 command! -range -nargs=* ZFExpandReversely :<line1>,<line2>call ZF_Expand(1, <f-args>)
 
 " ============================================================
-let s:new_line = "ZFVE__EVFZ"
+let s:new_line = "ZFVE_\x16_EVFZ"
 
 " data:
 " {
@@ -46,7 +46,7 @@ let s:new_line = "ZFVE__EVFZ"
 function! s:parse(content, tagL, tagR)
     let patternList = []
     let template = a:content
-    let tagPattern = '\V' . a:tagL . '\[^]\{-1,}' . a:tagR
+    let tagPattern = '\V' . a:tagL . '\[^' . "\x16" . ']\{-1,}' . a:tagR
     while 1
         let match = matchstr(template, tagPattern)
         if empty(match)
