@@ -14,8 +14,8 @@ endif
 if !exists('g:ZFVimExpand_textSplitToken')
     let g:ZFVimExpand_textSplitToken=','
 endif
-if !exists('g:ZFVimExpand_numSplitToken')
-    let g:ZFVimExpand_numSplitToken='..'
+if !exists('g:ZFVimExpand_rangeSplitToken')
+    let g:ZFVimExpand_rangeSplitToken='..'
 endif
 if !exists('g:ZFVimExpand_repeatToken')
     let g:ZFVimExpand_repeatToken='..'
@@ -89,10 +89,25 @@ function! s:parseItem(pattern)
         endif
     endif
 
-    " 1..3
-    let split = split(a:pattern, '\V' . g:ZFVimExpand_numSplitToken)
+    " 1..3 or a..d or \xAB12..\xAB21
+    let split = split(a:pattern, '\V' . g:ZFVimExpand_rangeSplitToken)
     if len(split) == 2
-        return range(split[0], split[1])
+        if match(split[0], '^[0-9]\+$') >= 0 && match(split[1], '^[0-9]\+$') >= 0
+            return range(split[0], split[1])
+        elseif (match(split[0], '\C^[a-z]$') >= 0 && match(split[1], '\C^[a-z]$') >= 0)
+                    \ || (match(split[0], '\C^[A-Z]$') >= 0 && match(split[1], '\C^[A-Z]$') >= 0)
+            let ret = []
+            for c in range(char2nr(split[0]), char2nr(split[1]))
+                call add(ret, nr2char(c))
+            endfor
+            return ret
+        elseif match(split[0], '^\\[xu][0-9a-f]\+$') >= 0 && match(split[1], '^\\[xu][0-9a-f]\+$') >= 0
+            let ret = []
+            for c in range(str2nr(strpart(split[0], 2), 16), str2nr(strpart(split[1], 2), 16))
+                call add(ret, nr2char(c))
+            endfor
+            return ret
+        endif
     endif
 
     " a,b,c

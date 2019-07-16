@@ -53,6 +53,9 @@ disadvantages:
 pattern rules:
 
 * `{2..5}` : expand to `2 3 4 5` number sequence
+* `{a..d}` : expand to `a b c d` letter sequence
+* `{\xAB12..\xAB21}` : expand to string sequence accorrding to the HEX value,
+    these token are equivalent: `\x` `\X` `\u` `\U`
 * `{aa,bb,cc}` : expand to `aa bb cc` string sequence
 * `{..}` : repeat previous pattern
 * `{..3}` : repeat 3rd pattern (index start from 0)
@@ -70,8 +73,8 @@ let g:ZFVimExpand_tagR='}'
 " token to split text
 let g:ZFVimExpand_textSplitToken=','
 
-" token to split number
-let g:ZFVimExpand_numSplitToken='..'
+" token to split range
+let g:ZFVimExpand_rangeSplitToken='..'
 
 " token to repeat previous pattern
 let g:ZFVimExpand_repeatToken='..'
