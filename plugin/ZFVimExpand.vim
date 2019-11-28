@@ -119,12 +119,12 @@ function! s:process(reverse, template, patternList, patternIndex)
     let itemList = a:patternList[a:patternIndex]
     if (a:reverse && a:patternIndex > 0) || (!a:reverse && a:patternIndex + 1 < len(a:patternList))
         for item in itemList
-            let templateNew = substitute(a:template, 'ZFVE_' . a:patternIndex . '_EVFZ', item, 'g')
+            let templateNew = substitute(a:template, 'ZFVE_' . a:patternIndex . '_EVFZ', '\=item', 'g')
             let ret .= s:process(a:reverse, templateNew, a:patternList, a:reverse ? (a:patternIndex - 1) : (a:patternIndex + 1))
         endfor
     else
         for item in itemList
-            let ret .= substitute(a:template, 'ZFVE_' . a:patternIndex . '_EVFZ', item, 'g')
+            let ret .= substitute(a:template, 'ZFVE_' . a:patternIndex . '_EVFZ', '\=item', 'g')
             let ret .= "\n"
         endfor
     endif
