@@ -32,11 +32,12 @@ command! -range -nargs=* ZFExpand :<line1>,<line2>call ZF_Expand(0, <f-args>)
 command! -range -nargs=* ZFExpandReversely :<line1>,<line2>call ZF_Expand(1, <f-args>)
 
 " ============================================================
-let s:new_line = "ZFVE_\x16_EVFZ"
-
 " data:
 " {
-"   'template' : 'aaa ZFVE_1_EVFZ bbb ZFVE_2_EVFZ ccc',
+"   'templateList' : [
+"     'aaa ZFVE_1_EVFZ bbb',
+"     'ZFVE_3_EVFZ ZFVE_2_EVFZ',
+"   ],
 "   'patternList' : [
 "     ['t1', 't2', ...],
 "     ['d1', 'd2', ...],
@@ -45,39 +46,44 @@ let s:new_line = "ZFVE_\x16_EVFZ"
 " }
 function! s:parse(content, tagL, tagR)
     let patternList = []
-    let template = a:content
-    let tagPattern = '\V' . a:tagL . '\[^' . "\x16" . ']\{-1,}' . a:tagR
-    while 1
-        let match = matchstr(template, tagPattern)
-        if empty(match)
-            break
-        endif
-        let pattern=strpart(match, len(a:tagL), len(match) - len(a:tagL) - len(a:tagR))
-        if matchstr(pattern, '\V' . g:ZFVimExpand_repeatToken . '\[0-9]\*') == pattern
-            let patternIndex = matchstr(pattern, '[0-9]*$')
-            if len(patternIndex) == 0
-                let patternIndex = len(patternList) - 1
+    let templateList = a:content
+    let tagPattern = '\V' . a:tagL . '\.\{-1,}' . a:tagR
+    for iTemplate in range(len(a:content))
+        let template = templateList[iTemplate]
+        while 1
+            let match = matchstr(template, tagPattern)
+            if empty(match)
+                break
             endif
-            if empty(patternList) || patternIndex >= len(patternList)
-                return {'template' : template, 'patternList' : patternList}
+            let pattern = strpart(match, len(a:tagL), len(match) - len(a:tagL) - len(a:tagR))
+            if matchstr(pattern, '\V' . g:ZFVimExpand_repeatToken . '\[0-9]\*') == pattern
+                let patternIndex = matchstr(pattern, '[0-9]*$')
+                if len(patternIndex) == 0
+                    let patternIndex = len(patternList) - 1
+                endif
+                if empty(patternList) || patternIndex >= len(patternList)
+                    break
+                endif
+
+                let matchPos = match(template, tagPattern)
+                let template = strpart(template, 0, matchPos) . 'ZFVE_' . patternIndex . '_EVFZ' . strpart(template, matchPos + len(match))
+                let templateList[iTemplate] = template
+                continue
             endif
 
+            try
+                let itemList = s:parseItem(pattern)
+            endtry
+            if empty(itemList)
+                continue
+            endif
             let matchPos = match(template, tagPattern)
-            let template = strpart(template, 0, matchPos) . 'ZFVE_' . patternIndex . '_EVFZ' . strpart(template, matchPos + len(match))
-            continue
-        endif
-
-        try
-            let itemList = s:parseItem(pattern)
-        endtry
-        if empty(itemList)
-            continue
-        endif
-        let matchPos = match(template, tagPattern)
-        let template = strpart(template, 0, matchPos) . 'ZFVE_' . len(patternList) . '_EVFZ' . strpart(template, matchPos + len(match))
-        call add(patternList, itemList)
-    endwhile
-    return {'template' : template, 'patternList' : patternList}
+            let template = strpart(template, 0, matchPos) . 'ZFVE_' . len(patternList) . '_EVFZ' . strpart(template, matchPos + len(match))
+            let templateList[iTemplate] = template
+            call add(patternList, itemList)
+        endwhile
+    endfor
+    return {'templateList' : templateList, 'patternList' : patternList}
 endfunction
 
 function! s:parseItem(pattern)
@@ -114,20 +120,24 @@ function! s:parseItem(pattern)
     return split(a:pattern, '\V' . g:ZFVimExpand_textSplitToken)
 endfunction
 
-function! s:process(reverse, template, patternList, patternIndex)
-    let ret = ''
+function! s:process(reverse, templateList, patternList, patternIndex)
+    let ret = []
     let itemList = a:patternList[a:patternIndex]
-    if (a:reverse && a:patternIndex > 0) || (!a:reverse && a:patternIndex + 1 < len(a:patternList))
-        for item in itemList
-            let templateNew = substitute(a:template, 'ZFVE_' . a:patternIndex . '_EVFZ', '\=item', 'g')
-            let ret .= s:process(a:reverse, templateNew, a:patternList, a:reverse ? (a:patternIndex - 1) : (a:patternIndex + 1))
-        endfor
-    else
-        for item in itemList
-            let ret .= substitute(a:template, 'ZFVE_' . a:patternIndex . '_EVFZ', '\=item', 'g')
-            let ret .= "\n"
-        endfor
-    endif
+    for template in a:templateList
+        if (a:reverse && a:patternIndex > 0) || (!a:reverse && a:patternIndex + 1 < len(a:patternList))
+            for item in itemList
+                let templateNew = []
+                for templateTmp in a:templateList
+                    call add(templateNew, substitute(templateTmp, 'ZFVE_' . a:patternIndex . '_EVFZ', '\=item', 'g'))
+                endfor
+                call extend(ret, s:process(a:reverse, templateNew, a:patternList, a:reverse ? (a:patternIndex - 1) : (a:patternIndex + 1)))
+            endfor
+        else
+            for item in itemList
+                call add(ret, substitute(template, 'ZFVE_' . a:patternIndex . '_EVFZ', '\=item', 'g'))
+            endfor
+        endif
+    endfor
     return ret
 endfunction
 
@@ -135,21 +145,19 @@ function! ZF_Expand(reverse, ...) range
     let tagL = get(a:, 1, g:ZFVimExpand_tagL)
     let tagR = get(a:, 2, g:ZFVimExpand_tagR)
 
-    let content = join(getline(a:firstline, a:lastline), s:new_line)
+    let content = getline(a:firstline, a:lastline)
     let data = s:parse(content, tagL, tagR)
     if empty(data['patternList'])
         echo 'unable to parse'
         return
     endif
 
-    let expanded = s:process(a:reverse, data['template'], data['patternList'], a:reverse ? (len(data['patternList']) - 1) : 0)
-    let expanded = substitute(expanded, "\n", s:new_line, 'g')
-    let lines = split(expanded, s:new_line)
+    let expanded = s:process(a:reverse, data['templateList'], data['patternList'], a:reverse ? (len(data['patternList']) - 1) : 0)
 
     execute 'silent! ' . a:firstline . ',' . a:lastline . 'd'
-    call append(a:firstline - 1, lines)
+    call append(a:firstline - 1, expanded)
     if g:ZFVimExpand_reindent
-        execute 'silent! normal =' . len(lines) . 'k'
+        execute 'silent! normal =' . len(expanded) . 'k'
     endif
 endfunction
 
