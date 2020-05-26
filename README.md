@@ -7,7 +7,7 @@ if you like my work, [check here](https://github.com/ZSaberLv0?utf8=%E2%9C%93&ta
 * before expand:
 
     ```
-    void {add,remove}Item{0..2}(int item{..}) {
+    void {add,remove}Item{0..2}(int item{@@}) {
     }
     ```
 
@@ -53,12 +53,45 @@ disadvantages:
 pattern rules:
 
 * `{2..5}` : expand to `2 3 4 5` number sequence
-* `{a..d}` : expand to `a b c d` letter sequence
+* `{d..a}` : expand to `d c b a` letter sequence
 * `{\xAB12..\xAB21}` : expand to string sequence accorrding to the HEX value,
+    which would be converted by `nr2char()`,
     these token are equivalent: `\x` `\X` `\u` `\U`
 * `{aa,bb,cc}` : expand to `aa bb cc` string sequence
-* `{..}` : repeat previous pattern
-* `{..3}` : repeat 3rd pattern (index start from 0)
+* `{@@}` : repeat previous pattern
+* `{@@3}` : repeat 3rd pattern (index start from 0)
+* `{Fn: let ret = p[3][i] :Fn}` : custom function to supply item
+
+    you must `let ret = xxx` to specify result item (as string or number type, for each `i`),
+    or `let ret = END` to indicate no more item
+
+    predefined vars:
+
+    * `reverse` : `0/1`, whether `ZFExpandReversely`
+    * `po` : all original pattern including self, e.g. `["2..5", "Fn: let ret = p[3][i] :Fn"]`
+    * `p` : all parsed pattern including self, e.g. `[[2,3,4,5], function(xxx)]`
+    * `pi` : self parttern index in `p`
+    * `i` : current item loop index
+    * `END` : dummy item that indicates no more item
+
+    you may use `|` for multiple commands (`:h :bar`)
+
+* `{Fn:"YourFunc":Fn}` : similar as above, but use function name,
+    YourFunc must take one param,
+    which is a Dict contains params described above,
+    and must return proper values to indicate item loop,
+    for example:
+
+    ```
+    function! YourFunc(params)
+        let i = a:params['i']
+        if i >= 10
+            return a:params['END']
+        else
+            return i
+        endif
+    endfunction
+    ```
 
 you may also supply your own pattern rules, see the Config below
 
@@ -77,7 +110,7 @@ let g:ZFVimExpand_textSplitToken=','
 let g:ZFVimExpand_rangeSplitToken='..'
 
 " token to repeat previous pattern
-let g:ZFVimExpand_repeatToken='..'
+let g:ZFVimExpand_repeatToken='@@'
 
 " whether auto reindent after expand
 let g:ZFVimExpand_reindent=0
