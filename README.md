@@ -7,11 +7,11 @@ if you like my work, [check here](https://github.com/ZSaberLv0?utf8=%E2%9C%93&ta
 * before expand:
 
     ```
-    void {add,remove}Item{0..2}(int item{@@}) {
+    void <add,remove>Item<0..2>(int item<@@>) {
     }
     ```
 
-* after expand: (by `:ZFExpandReversely`)
+* after expand: (by `:ZFExpandReversely < >`)
 
     ```
     void addItem0(int item0) {
@@ -59,7 +59,9 @@ pattern rules:
     these token are equivalent: `\x` `\X` `\u` `\U`
 * `{aa,bb,cc}` : expand to `aa bb cc` string sequence
 * `{@@}` : repeat previous pattern
-* `{@@3}` : repeat 3rd pattern (index start from 0)
+    * `{@@3}` : repeat 3rd pattern (index start from 0,
+        note: `{@@}` does not obtain one index, but `{x,y,z@@}` would obtain one index)
+    * `{x,y,z@@}` : repeat previous pattern, but use the specified `x,y,z` as item list
 * `{Fn: let ret = p[3][i] :Fn}` : custom function to supply item
 
     you must `let ret = xxx` to specify result item (as string or number type, for each `i`),

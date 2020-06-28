@@ -207,34 +207,34 @@ function! s:process(insertTo, reverse, templateList, patternOrigList, patternLis
     else
         return []
     endif
-    for template in a:templateList
-        if (a:reverse && a:patternIndex > 0) || (!a:reverse && a:patternIndex + 1 < len(a:patternList))
-            let i = -1
-            while 1
-                let i += 1
-                let item = Fn_nextItem(a:reverse, a:patternOrigList, a:patternList, a:patternIndex, i)
-                if type(item) == type(s:nextItem_END)
-                    break
-                endif
-                let templateNew = []
-                for templateTmp in a:templateList
-                    call add(templateNew, s:processItem(a:reverse, a:patternOrigList, a:patternList, a:patternIndex, i, templateTmp, item))
-                endfor
-                let ret += s:process(a:insertTo + ret, a:reverse, templateNew, a:patternOrigList, a:patternList, a:reverse ? (a:patternIndex - 1) : (a:patternIndex + 1))
-            endwhile
-        else
-            let i = -1
-            while 1
-                let i += 1
-                let item = Fn_nextItem(a:reverse, a:patternOrigList, a:patternList, a:patternIndex, i)
-                if type(item) == type(s:nextItem_END)
-                    break
-                endif
+    if (a:reverse && a:patternIndex > 0) || (!a:reverse && a:patternIndex + 1 < len(a:patternList))
+        let i = -1
+        while 1
+            let i += 1
+            let item = Fn_nextItem(a:reverse, a:patternOrigList, a:patternList, a:patternIndex, i)
+            if type(item) == type(s:nextItem_END)
+                break
+            endif
+            let templateNew = []
+            for templateTmp in a:templateList
+                call add(templateNew, s:processItem(a:reverse, a:patternOrigList, a:patternList, a:patternIndex, i, templateTmp, item))
+            endfor
+            let ret += s:process(a:insertTo + ret, a:reverse, templateNew, a:patternOrigList, a:patternList, a:reverse ? (a:patternIndex - 1) : (a:patternIndex + 1))
+        endwhile
+    else
+        let i = -1
+        while 1
+            let i += 1
+            let item = Fn_nextItem(a:reverse, a:patternOrigList, a:patternList, a:patternIndex, i)
+            if type(item) == type(s:nextItem_END)
+                break
+            endif
+            for template in a:templateList
                 call append(a:insertTo + ret, s:processItem(a:reverse, a:patternOrigList, a:patternList, a:patternIndex, i, template, item))
                 let ret += 1
-            endwhile
-        endif
-    endfor
+            endfor
+        endwhile
+    endif
     return ret
 endfunction
 function! s:processItem(reverse, patternOrigList, patternList, patternIndex, i, template, item)
