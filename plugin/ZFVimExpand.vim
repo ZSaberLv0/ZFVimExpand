@@ -47,11 +47,19 @@ command! -range -nargs=* ZFExpandReversely :<line1>,<line2>call ZF_Expand(1, <f-
 "     'let ret = p[2][i]', // for {Fn:let ret = p[2][i]:Fn}
 "     ...
 "   ],
+"   'errorHint' : '',
 " }
 function! s:parse(content, tagL, tagR)
+    let errorRet = {
+                \   'templateList' : [],
+                \   'patternOrigList' : [],
+                \   'patternList' : [],
+                \   'errorHint' : '',
+                \ }
     let templateList = a:content
-    let patternList = []
     let patternOrigList = []
+    let patternList = []
+    let patternIndexRefList = []
     let tagPattern = '\V' . a:tagL . '\.\{-1,}' . a:tagR
     for iTemplate in range(len(a:content))
         let template = templateList[iTemplate]
@@ -66,9 +74,7 @@ function! s:parse(content, tagL, tagR)
                 if len(patternIndexRef) == 0
                     let patternIndexRef = len(patternList) - 1
                 endif
-                if empty(patternList) || patternIndexRef >= len(patternList)
-                    break
-                endif
+                call add(patternIndexRefList, patternIndexRef)
 
                 let patternTmp = substitute(pattern, '\V' . g:ZFVimExpand_repeatToken . '\[0-9]\*\$', '', '')
                 if empty(patternTmp)
@@ -104,7 +110,23 @@ function! s:parse(content, tagL, tagR)
             call add(patternList, itemList)
         endwhile
     endfor
-    return {'templateList' : templateList, 'patternOrigList' : patternOrigList, 'patternList' : patternList}
+    if empty(patternList)
+        let errorRet['errorHint'] = 'no valid pattern found'
+        return errorRet
+    else
+        for patternIndexRef in patternIndexRefList
+            if patternIndexRef < 0 || patternIndexRef >= len(patternList)
+                let errorRet['errorHint'] = 'invalid ref index: ' . patternIndexRef
+                return errorRet
+            endif
+        endfor
+    endif
+    return {
+                \   'templateList' : templateList,
+                \   'patternOrigList' : patternOrigList,
+                \   'patternList' : patternList,
+                \   'errorHint' : '',
+                \ }
 endfunction
 
 function! s:parseItem(pattern)
@@ -321,7 +343,11 @@ function! ZF_Expand(reverse, ...) range
     let content = getline(a:firstline, a:lastline)
     let data = s:parse(content, tagL, tagR)
     if empty(data['patternList'])
-        echo '[ZFExpand] unable to parse pattern'
+        if empty(data['errorHint'])
+            echo '[ZFExpand] unable to parse pattern'
+        else
+            echo '[ZFExpand] unable to parse pattern: ' . data['errorHint']
+        endif
         return
     endif
 

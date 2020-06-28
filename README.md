@@ -61,8 +61,8 @@ pattern rules:
 * `{@@}` : repeat previous pattern
     * `{@@3}` : repeat 3rd pattern (index start from 0,
         note: `{@@}` does not obtain one index, but `{x,y,z@@}` would obtain one index)
-    * `{x,y,z@@}` : repeat previous pattern, but use the specified `x,y,z` as item list
-* `{Fn: let ret = p[3][i] :Fn}` : custom function to supply item
+    * `{x,y,z@@}` : repeat previous pattern, but use the specified `x,y,z` as item pattern
+* `{Fn: let ret = i<len(p[3]) ? p[3][i] : END :Fn}` : custom function to supply item
 
     you must `let ret = xxx` to specify result item (as string or number type, for each `i`),
     or `let ret = END` to indicate no more item
@@ -77,6 +77,9 @@ pattern rules:
     * `END` : dummy item that indicates no more item
 
     you may use `|` for multiple commands (`:h :bar`)
+
+    you may append `@@N` to ref another pattern
+    (`{Fn: let ret = i<len(p[3]) ? p[3][i] : END :Fn@@3}`)
 
 * `{Fn:"YourFunc":Fn}` : similar as above, but use function name,
     YourFunc must take one param,
@@ -94,6 +97,10 @@ pattern rules:
         endif
     endfunction
     ```
+
+    you may append `@@N` to ref another pattern
+    (`{Fn:"YourFunc":Fn@@3}`)
+
 
 you may also supply your own pattern rules, see the Config below
 
