@@ -203,7 +203,8 @@ function! s:parseItem(pattern)
     return split(a:pattern, '\V' . g:ZFVimExpand_textSplitToken)
 endfunction
 
-let s:nextItem_END = []
+" :h E706
+let s:nextItem_END = '_ZFVE_E_'
 function! s:process(insertTo, reverse, templateList, patternOrigList, patternList, patternIndex)
     let ret = 0
 
@@ -234,7 +235,7 @@ function! s:process(insertTo, reverse, templateList, patternOrigList, patternLis
         while 1
             let i += 1
             let item = Fn_nextItem(a:reverse, a:patternOrigList, a:patternList, a:patternIndex, i)
-            if type(item) == type(s:nextItem_END)
+            if item == s:nextItem_END
                 break
             endif
             let templateNew = []
@@ -248,7 +249,7 @@ function! s:process(insertTo, reverse, templateList, patternOrigList, patternLis
         while 1
             let i += 1
             let item = Fn_nextItem(a:reverse, a:patternOrigList, a:patternList, a:patternIndex, i)
-            if type(item) == type(s:nextItem_END)
+            if item == s:nextItem_END
                 break
             endif
             for template in a:templateList
@@ -284,8 +285,7 @@ function! s:processItem(reverse, patternOrigList, patternList, patternIndex, i, 
         endif
 
         let item = Fn_nextItem(a:reverse, a:patternOrigList, a:patternList, index, a:i)
-        if type(item) == type(s:nextItem_END)
-            unlet item
+        if item == s:nextItem_END
             let item = ''
         endif
         let template = substitute(template, 'ZFVE_[0-9]\+r' . a:patternIndex . '_EVFZ', item, '')
