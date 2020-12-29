@@ -296,19 +296,19 @@ function! s:process_nextItem_list(reverse, patternOrigList, patternList, pattern
     if a:i >= len(a:patternList[a:patternIndex])
         return s:nextItem_END
     else
-        return a:patternList[a:patternIndex][a:i]
+        return string(a:patternList[a:patternIndex][a:i])
     endif
 endfunction
 function! s:process_nextItem_function(reverse, patternOrigList, patternList, patternIndex, i)
     try
-        return a:patternList[a:patternIndex][a:i]({
+        return string(a:patternList[a:patternIndex][a:i]({
                     \   'reverse' : a:reverse,
                     \   'po' : a:patternOrigList,
                     \   'p' : a:patternList,
                     \   'pi' : a:patternIndex,
                     \   'i' : a:i,
                     \   'END' : s:nextItem_END,
-                    \ })
+                    \ }))
     catch
         echo '[ZFExpand] failed to execute function'
         echo v:exception
@@ -330,7 +330,7 @@ function! s:process_nextItem_command(reverse, patternOrigList, patternList, patt
         echo v:exception
     endtry
     if exists('ret')
-        return ret
+        return string(ret)
     else
         return {}
     endif
