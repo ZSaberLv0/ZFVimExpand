@@ -234,7 +234,7 @@ function! s:process(insertTo, reverse, templateList, patternOrigList, patternLis
         let i = -1
         while 1
             let i += 1
-            let item = Fn_nextItem(a:reverse, a:patternOrigList, a:patternList, a:patternIndex, i)
+            let item = s:process_nextItem(Fn_nextItem, a:reverse, a:patternOrigList, a:patternList, a:patternIndex, i)
             if item == s:nextItem_END
                 break
             endif
@@ -248,7 +248,7 @@ function! s:process(insertTo, reverse, templateList, patternOrigList, patternLis
         let i = -1
         while 1
             let i += 1
-            let item = Fn_nextItem(a:reverse, a:patternOrigList, a:patternList, a:patternIndex, i)
+            let item = s:process_nextItem(Fn_nextItem, a:reverse, a:patternOrigList, a:patternList, a:patternIndex, i)
             if item == s:nextItem_END
                 break
             endif
@@ -284,7 +284,7 @@ function! s:processItem(reverse, patternOrigList, patternList, patternIndex, i, 
             break
         endif
 
-        let item = Fn_nextItem(a:reverse, a:patternOrigList, a:patternList, index, a:i)
+        let item = s:process_nextItem(Fn_nextItem, a:reverse, a:patternOrigList, a:patternList, index, a:i)
         if item == s:nextItem_END
             let item = ''
         endif
@@ -296,24 +296,24 @@ function! s:process_nextItem_list(reverse, patternOrigList, patternList, pattern
     if a:i >= len(a:patternList[a:patternIndex])
         return s:nextItem_END
     else
-        return string(a:patternList[a:patternIndex][a:i])
+        return a:patternList[a:patternIndex][a:i]
     endif
 endfunction
 function! s:process_nextItem_function(reverse, patternOrigList, patternList, patternIndex, i)
     try
-        return string(a:patternList[a:patternIndex][a:i]({
+        return a:patternList[a:patternIndex][a:i]({
                     \   'reverse' : a:reverse,
                     \   'po' : a:patternOrigList,
                     \   'p' : a:patternList,
                     \   'pi' : a:patternIndex,
                     \   'i' : a:i,
                     \   'END' : s:nextItem_END,
-                    \ }))
+                    \ })
     catch
         echo '[ZFExpand] failed to execute function'
         echo v:exception
     endtry
-    return {}
+    return s:nextItem_END
 endfunction
 function! s:process_nextItem_command(reverse, patternOrigList, patternList, patternIndex, i)
     let _cmd = a:patternList[a:patternIndex]
@@ -330,9 +330,18 @@ function! s:process_nextItem_command(reverse, patternOrigList, patternList, patt
         echo v:exception
     endtry
     if exists('ret')
-        return string(ret)
+        return ret
     else
-        return {}
+        return s:nextItem_END
+    endif
+endfunction
+
+function! s:process_nextItem(Fn_nextItem, reverse, patternOrigList, patternList, patternIndex, i)
+    let ret = a:Fn_nextItem(a:reverse, a:patternOrigList, a:patternList, a:patternIndex, a:i)
+    if type(ret) == type('')
+        return ret
+    else
+        return string(ret)
     endif
 endfunction
 
